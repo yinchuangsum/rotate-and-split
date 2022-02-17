@@ -14,7 +14,7 @@ if __name__ == '__main__':
         pass
 
     # CRAFT
-    img_list, _ = text_detection_module(f"raw_image/735.jpg", use_cuda)
+    img_list, _ = text_detection_module(f"C:\\Users\\hansheng\\OneDrive\\Documents\\Lightshot\\Screenshot_98.png", use_cuda)
 
     image_path = "result"
     output_path = "./output"
@@ -24,10 +24,10 @@ if __name__ == '__main__':
         if file.endswith(".txt"):
             with open(os.path.join(image_path, file)) as f:
                 bboxes = get_points_from_file(f.readlines())
-            img_path = os.path.join("raw_image", "735.jpg")
+            img_path = os.path.join(f"C:\\Users\\hansheng\\OneDrive\\Documents\\Lightshot\\Screenshot_98.png")
             im = cv2.imread(img_path)
             for i, box in enumerate(bboxes):
-                # print(box)
+                print(box)
                 (h, w) = im.shape[:2]
                 (cX, cY) = (w//2, h//2)
                 center = Point(cX, cY)
@@ -48,4 +48,7 @@ if __name__ == '__main__':
 
                 output = file.replace(".txt", f"_{i}.jpg")
                 path = os.path.join(output_path, output)
-                cv2.imwrite(path, cropped)
+                try:
+                    cv2.imwrite(path, cropped)
+                except:
+                    pass
