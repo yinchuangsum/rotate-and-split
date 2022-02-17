@@ -1,114 +1,24 @@
+import base64
 import os
-import math
+import sys
+
 import cv2
-
-
-class Point:
-    def __init__(self, x, y):
-        self.x = int(x)
-        self.y = int(y)
-
-    def get_tuple(self):
-        return self.x, self.y
-
-    def get_rotated(self, a, o):
-        new_x = ((self.x - o.x) * math.cos(-math.radians(a))) - \
-                ((self.y - o.y) * math.sin(-math.radians(a))) + o.x
-        new_y = ((self.x - o.x) * math.sin(-math.radians(a))) + \
-                ((self.y - o.y) * math.cos(-math.radians(a))) + o.y
-        return Point(new_x, new_y)
-
-    def __str__(self):
-        return f"({self.x}, {self.y})"
-
-
-class BBox:
-    def __init__(self, data):
-        coordinates = data.split(',')
-        self.tl = Point(coordinates[0], coordinates[1])
-        self.tr = Point(coordinates[2], coordinates[3])
-        self.bl = Point(coordinates[4], coordinates[5])
-        self.br = Point(coordinates[6], coordinates[7])
-
-    @classmethod
-    def of(cls, tl, tr, bl, br):
-        data = [str(tl.x), str(tl.y), str(tr.x), str(tr.y), str(bl.x), str(bl.y), str(br.x), str(br.y)]
-        return BBox(','.join(data))
-
-    def get_center_y(self):
-        return (self.tl.y + self.br.y + self.tr.y + self.bl.y) / 4
-
-    def get_rotate_angle(self):
-        return math.degrees(math.atan((self.tr.y - self.tl.y) / (self.tr.x - self.tl.x)))
-
-    def get_rotate_box(self, o):
-        a = self.get_rotate_angle()
-        return BBox.of(self.tl.get_rotated(a, o), self.tr.get_rotated(a, o),
-                       self.bl.get_rotated(a, o), self.br.get_rotated(a, o))
-
-    def __str__(self):
-        return f"[tl:{self.tl}, tr:{self.tr}, bl:{self.bl}, br:{self.br}]"
-
-
-def merge_boxes(box_to_merge):
-    tl = box_to_merge[0].tl
-    tr = box_to_merge[0].tr
-    bl = box_to_merge[0].bl
-    br = box_to_merge[0].br
-    for box in box_to_merge:
-        if box.bl.x < bl.x:
-            bl = box.bl
-        if box.tl.x < tl.x:
-            tl = box.tl
-        if box.tr.x > tr.x:
-            tr = box.tr
-        if box.br.x > br.x:
-            br = box.br
-    return BBox.of(tl, tr, bl, br)
-
-
-def merge_nearest_bbox(boxes):
-    dist = dict()
-    points = dict()
-    x = []
-    for idx, bbox in enumerate(boxes):
-        x.append(bbox.get_center_y())
-        for i in range(0, idx):
-            points[(i, idx)] = abs(x[i] - x[idx])
-            distance = abs(x[i] - x[idx])
-            if dist.get(distance) is None:
-                dist[distance] = []
-            dist[distance].append(i)
-            dist[distance].append(idx)
-
-    length = len(x)
-    box_to_merge = set()
-    while length > 3:
-        mini = min(dist.keys())
-        box_to_merge.update(list(dist.pop(mini)))
-        length = len(x) - len(box_to_merge) + 1
-
-    box_to_merge = [boxes[i] for i in box_to_merge]
-    [boxes.remove(i) for i in box_to_merge]
-    box = merge_boxes(box_to_merge)
-    boxes.append(box)
-
-    return boxes
-
-
-def get_points_from_file(datas):
-    boxes = []
-    for data in datas:
-        if not data.isspace():
-            boxes.append(BBox(data.replace("\n", "")))
-
-    if len(boxes) > 3:
-        boxes = merge_nearest_bbox(boxes)
-    return boxes
-
+from text_detection_craft import get_points_from_file, Point, text_detection_module
 
 if __name__ == '__main__':
-    image_path = "images"
+
+    img_path = f"C:\\Users\\hansheng\\OneDrive\\Documents\\Lightshot\\Screenshot_98.png"
+    use_cuda = False
+    try:
+        print("Using {}".format(sys.argv[1]))
+        use_cuda = True
+    except:
+        pass
+
+    # CRAFT
+    img_list, _ = text_detection_module(img_path, use_cuda)
+
+    image_path = "result"
     output_path = "./output"
     if not os.path.exists(output_path):
         os.mkdir(output_path)
@@ -116,8 +26,8 @@ if __name__ == '__main__':
         if file.endswith(".txt"):
             with open(os.path.join(image_path, file)) as f:
                 bboxes = get_points_from_file(f.readlines())
-            img = file.replace(".txt", ".jpg")
-            im = cv2.imread(os.path.join(image_path, img))
+            img_path = os.path.join(img_path)
+            im = cv2.imread(img_path)
             for i, box in enumerate(bboxes):
                 (h, w) = im.shape[:2]
                 (cX, cY) = (w//2, h//2)
@@ -139,4 +49,12 @@ if __name__ == '__main__':
 
                 output = file.replace(".txt", f"_{i}.jpg")
                 path = os.path.join(output_path, output)
-                cv2.imwrite(path, cropped)
+                try:
+                    cv2.imwrite(path, cropped)
+
+                    # Convert to base64 and append
+                    _, buffer = cv2.imencode('.jpg', cropped)
+                    image_base64 = base64.b64encode(buffer).decode('utf-8')
+                    print(image_base64)
+                except:
+                    pass
