@@ -249,7 +249,7 @@ def text_detection_module(image_path, use_cuda = False):
     net.eval()
 
     refine_net = RefineNet()
-    print('Loading weights of refiner from checkpoint (craft_refiner_CTW1500.pth)')
+    # print('Loading weights of refiner from checkpoint (craft_refiner_CTW1500.pth)')
     weight_path = "craft_refiner_CTW1500.pth"
     if use_cuda:
         refine_net.load_state_dict(copyStateDict(torch.load(weight_path)))

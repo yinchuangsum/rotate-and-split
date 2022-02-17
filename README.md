@@ -10,3 +10,6 @@ python main.py cuda
 pip install -r requirements.txt
 python main.py
 ```
+
+Notes
+1. All the images will crop into `output` folder
