@@ -24,6 +24,7 @@ from preprocessing import crop_image_from_craft
 from text_detection_utils import craft_utils
 from text_detection_utils import imgproc
 from text_detection_utils import file_utils
+from text_detection_utils.file_utils import getBboxArray
 from text_detection_utils.refinenet import RefineNet
 import json
 import zipfile
@@ -276,7 +277,7 @@ def text_detection_module(image_path, use_cuda = False):
     img_list_to_return = crop_image_from_craft(image, bboxes)
 
 
-    return img_list_to_return, bboxes
+    return img_list_to_return, getBboxArray(image_path, image[:, :, ::-1], polys, dirname=result_folder)
 
     # # save score text
     # filename, file_ext = str(index), ".jpg"

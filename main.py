@@ -16,7 +16,9 @@ if __name__ == '__main__':
         pass
 
     # CRAFT
-    img_list, _ = text_detection_module(img_path, use_cuda)
+    img_list, bbox_array = text_detection_module(img_path, use_cuda)
+
+    print(get_points_from_file(bbox_array))
 
     image_path = "result"
     output_path = "./output"
@@ -25,6 +27,7 @@ if __name__ == '__main__':
     for file in os.listdir(image_path):
         if file.endswith(".txt"):
             with open(os.path.join(image_path, file)) as f:
+                print(get_points_from_file(f.readlines()))
                 bboxes = get_points_from_file(f.readlines())
             img_path = os.path.join(img_path)
             im = cv2.imread(img_path)
@@ -55,6 +58,6 @@ if __name__ == '__main__':
                     # Convert to base64 and append
                     _, buffer = cv2.imencode('.jpg', cropped)
                     image_base64 = base64.b64encode(buffer).decode('utf-8')
-                    print(image_base64)
+                    # print(image_base64)
                 except:
                     pass
